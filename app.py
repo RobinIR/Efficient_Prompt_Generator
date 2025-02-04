@@ -7,7 +7,7 @@ app = Flask(__name__)
 CORS(app)
 
 # Replace with your DeepSeek API key and endpoint
-DEEPSEEK_API_KEY = "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"
+DEEPSEEK_API_KEY = "CREATE API KEY FORM THE FOLLOWING URL"
 DEEPSEEK_API_URL = "https://openrouter.ai/api/v1"
 
 
