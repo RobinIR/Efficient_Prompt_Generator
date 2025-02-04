@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Make Your Prompt Efficient for AI</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/js/all.min.js"></script>
+    <style>
+        body {
+            background-color: #f8f9fa;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding-top: 50px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 600px;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        textarea {
+            margin-bottom: 10px;
+        }
+
+        .btn-primary {
+            width: 100%;
+            padding: 5px;
+            font-size: 16px;
+        }
+
+        .response-box {
+            position: relative;
+            background: #e9ecef;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 15px;
+        }
+
+        .icons {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+        }
+
+        .icons i {
+            cursor: pointer;
+            margin-left: 10px;
+            font-size: 18px;
+        }
+
+        .spinner-border {
+            display: none;
+            margin: 10px auto;
+        }
+
+        #copyButton,
+        #gptButton,
+        #perplexButton {
+            margin-right: 1%;
+            float: right;
+            font-size: x-small;
+        }
+
+        #sendButton {
+            padding: 5px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h3 class="text-center">Make Your Prompt Efficient for AI</h3>
+        <div class="my-3">
+            <textarea id="promptInput" class="form-control" rows="4" placeholder="Enter your prompt..."></textarea>
+        </div>
+        <button id="sendButton" class="btn btn-primary">Submit</button>
+        <div class="text-center mt-2">
+            <i class="fa-solid fa-spinner fa-spin text-primary d-none" id="loadingSpinner"></i>
+        </div>
+
+        <div id="responseContainer" class="response-box d-none">
+            <!-- <div class="icons">
+                <i class="fas fa-copy" id="copyButton" title="Copy"></i>
+                <i class="fas fa-robot" id="gptButton" title="Ask GPT"></i>
+            </div> -->
+            <button class="btn btn-outline-primary btn-sm" id="copyButton">Copy</i></button>
+            <button class="btn btn-outline-primary btn-sm" id="perplexButton">Ask Perplexity</i></button>
+            <button class="btn btn-outline-primary btn-sm" id="gptButton">Ask ChatGPT</i></button>
+
+            <br><br>
+            <span id="responseText"></span>
+        </div>
+    </div>
+
+    <script>
+        function delay(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+        document.addEventListener("DOMContentLoaded", function () {
+            const sendButton = document.getElementById("sendButton");
+            const promptInput = document.getElementById("promptInput");
+            const loadingSpinner = document.getElementById("loadingSpinner");
+            const responseContainer = document.getElementById("responseContainer");
+            const responseText = document.getElementById("responseText");
+            const copyButton = document.getElementById("copyButton");
+            const gptButton = document.getElementById("gptButton");
+            let finalText = null;
+
+            sendButton.addEventListener("click", async function () {
+                let userInput = document.getElementById("promptInput").value.trim();
+                if (!userInput) {
+                    alert("Please enter a prompt.");
+                    return;
+                }
+
+                sendButton.disabled = true;
+                promptInput.disabled = true;
+                document.getElementById("loadingSpinner").classList.remove("d-none");
+                responseContainer.classList.add("d-none");
+
+                try {
+                    let response = await fetch("/process", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ prompt: userInput })
+                    });
+
+                    if (!response.ok) {
+                        throw new Error("Network response was not ok");
+                    }
+
+                    //testing
+                    // await delay(3000); // Simulate a delay of 5 seconds
+
+                    // let response = await fetch("https://jsonplaceholder.typicode.com/posts/1");
+
+
+
+                    let data = await response.json();
+                    console.log(data.refined_prompt);
+                    if (data.refined_prompt === "") {
+
+                        responseText.textContent = "No refined prompt found. Try again after some seconds.";
+                        responseContainer.classList.remove("d-none");
+
+                    } else {
+                        responseText.textContent = data.refined_prompt;
+                        finalText = data.refined_prompt;
+                        responseContainer.classList.remove("d-none");
+                    }
+
+
+
+                    //testing
+                    // responseText.textContent = data.title + " " + data.body;
+                    // finalText = data.title + " " + data.body;
+
+                } catch (error) {
+                    alert("Error processing request. Try again later.");
+                } finally {
+                    sendButton.disabled = false;
+                    promptInput.disabled = false;
+                    document.getElementById("loadingSpinner").classList.add("d-none");
+                }
+            });
+
+            document.getElementById("copyButton").addEventListener("click", function () {
+                navigator.clipboard.writeText(document.getElementById("responseText").textContent);
+                alert("Copied to clipboard!");
+            });
+
+            document.getElementById("gptButton").addEventListener("click", function () {
+                const gptUrl = `https://chat.openai.com/?q=${encodeURIComponent(finalText)}`;
+                window.open(gptUrl, "_blank");
+            });
+
+            document.getElementById("perplexButton").addEventListener("click", function () {
+                const perplexUrl = `https://www.perplexity.ai/search?q=${encodeURIComponent(finalText)}`;
+                window.open(perplexUrl, "_blank");
+            });
+
+
+        });
+    </script>
+</body>
+
+</html>
